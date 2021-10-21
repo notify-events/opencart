@@ -1,0 +1,139 @@
+<script>
+    $(document).ready(function() {
+        $('.ne-message-tag').on('click', function() {
+            $('#' + $(this).data('target')).insertIntoTextArea('[' + $(this).data('tag') + ']');
+        });
+
+        $.fn.insertIntoTextArea = function(textToInsert) {
+            var input = $(this);
+
+            var cursorPosStart = input.prop('selectionStart');
+            var cursorPosEnd   = input.prop('selectionEnd');
+
+            var currentValue = input.val();
+            var textBefore   = currentValue.substring(0,  cursorPosStart);
+            var textAfter    = currentValue.substring(cursorPosEnd, currentValue.length);
+
+            input.val(textBefore + textToInsert + textAfter);
+
+            input.prop('selectionStart', cursorPosStart);
+            input.prop('selectionEnd', cursorPosStart + textToInsert.length);
+
+            input.focus();
+        }
+    });
+</script>
+
+<div id="content">
+    <div id="notify-events-event-form">
+        <h2>{{ title }}</h2>
+
+        <form method="post">
+
+            <!-- Event -->
+            <input type="hidden" name="event_class" value="{{ item.event_class }}">
+
+            <!-- Title -->
+            <div class="form-group{{ 'title' in required_fields ? ' required' : '' }}{{ 'title' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_title_input">Title</label>
+                <input type="text" name="title" class="form-control" id="event_title_input" placeholder="Title" value="{{ item.title }}">
+                {{ 'title' in errors|keys ? '<div class="text-danger">' ~ errors.title ~ '</div>' : '' }}
+            </div>
+
+            <!-- Enabled -->
+            <div class="form-group{{ 'enabled' in required_fields ? ' required' : '' }}{{ 'enabled' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_title_input">Enabled</label>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" value="1" name="enabled" {{ item.enabled ? 'checked' : '' }}> Enabled
+                    </label>
+                </div>
+                {{ 'enabled' in errors|keys ? '<div class="text-danger">' ~ errors.enabled ~ '</div>' : '' }}
+            </div>
+
+            <!-- Channels -->
+            <div class="form-group{{ 'channel_ids' in required_fields ? ' required' : '' }}{{ 'channel_ids' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_title_input">Channels</label>
+                {% if channels is empty %}
+                    <div><span class="label label-danger">{{ create_a_channel_first }}</span></div>
+                {% else %}
+                    <div class="checkbox">
+                        {% for channel in channels %}
+                            <label>
+                                <input type="checkbox" name="channel_ids[{{ channel.id }}]" {{ channel.id in item.channel_ids ? 'checked' : '' }}> {{ channel.title }}
+                            </label><br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {{ 'channel_ids' in errors|keys ? '<p class="text-danger">' ~ errors.channel_ids ~ '</p>' : '' }}
+            </div>
+
+            <!-- Subject -->
+            <div class="form-group{{ 'subject' in required_fields ? ' required' : '' }}{{ 'subject' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_subject_input">Subject</label>
+
+                <ul class="nav nav-tabs" style="margin-bottom: 5px">
+                    {% for group, set in tags %}
+                        <li class="{{ group == 'store' ? 'active' : '' }}">
+                            <a class="small" href="#tab-subject-{{ group }}" data-toggle="tab">{{ set.group }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="tab-content">
+                    {% for group, set in tags %}
+                        <div class="tab-pane{{ group == 'store' ? ' active' : '' }}" id="tab-subject-{{ group }}">
+                            {% for key, tag in set.tags %}
+                                <button type="button" data-tag="{{ key }}" data-target="event_subject_input" class="ne-message-tag btn btn-default btn-xs" style="margin-bottom: 5px"><b>{{ key }}</b> | {{ tag }}</button>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <input type="text" name="subject" class="form-control" id="event_subject_input" placeholder="Subject" value="{{ item.subject }}">
+                {{ 'subject' in errors|keys ? '<div class="text-danger">' ~ errors.subject ~ '</div>' : '' }}
+            </div>
+
+            <!-- Message -->
+            <div class="form-group{{ 'message' in required_fields ? ' required' : '' }}{{ 'message' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_message_input">Message</label>
+
+                <ul class="nav nav-tabs" style="margin-bottom: 5px">
+                    {% for group, set in tags %}
+                        <li class="{{ group == 'store' ? 'active' : '' }}">
+                            <a class="small" href="#tab-message-{{ group }}" data-toggle="tab">{{ set.group }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="tab-content">
+                    {% for group, set in tags %}
+                        <div class="tab-pane{{ group == 'store' ? ' active' : '' }}" id="tab-message-{{ group }}">
+                            {% for key, tag in set.tags %}
+                                <button type="button" data-tag="{{ key }}" data-target="event_message_input" class="ne-message-tag btn btn-default btn-xs" style="margin-bottom: 5px"><b>{{ key }}</b> | {{ tag }}</button>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <textarea rows="10" name="message" class="form-control" id="event_message_input" placeholder="Message">{{ item.message }}</textarea>
+                {{ 'message' in errors|keys ? '<div class="text-danger">' ~ errors.message ~ '</div>' : '' }}
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group{{ 'priority' in required_fields ? ' required' : '' }}{{ 'priority' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="event_priority_input">Priority</label>
+                <select class="form-control" name="priority" id="event_priority_input">
+                    {% for value, title in priorities %}
+                        <option value="{{ value }}"{{ value == item.priority ? ' selected' : '' }}>{{ title }}</option>
+                    {% endfor %}
+                </select>
+                {{ 'priority' in errors|keys ? '<div class="text-danger">' ~ errors.priority ~ '</div>' : '' }}
+            </div>
+
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Save changes">
+                <!--input type="submit" class="btn btn-default" name="preview" value="Preview"-->
+            </div>
+        </form>
+
+    </div>
+</div>

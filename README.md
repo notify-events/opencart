@@ -1,1 +1,1 @@
-# opencart
+# Notify.Events extension for OpenCart

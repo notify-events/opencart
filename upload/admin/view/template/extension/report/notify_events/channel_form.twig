@@ -1,0 +1,27 @@
+<div id="content">
+    <div id="notify-events-channel-form">
+        <h2>{{ title }}</h2>
+
+        <form method="post">
+
+            <!-- Title -->
+            <div class="form-group{{ 'title' in required_fields ? ' required' : '' }}{{ 'title' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="channel_title_input">Title</label>
+                <input type="text" name="title" class="form-control" id="channel_title_input" placeholder="Title" value="{{ item.title }}">
+                {{ 'title' in errors|keys ? '<div class="text-danger">' ~ errors.title ~ '</div>' : '' }}
+            </div>
+
+            <!-- Token -->
+            <div class="form-group{{ 'token' in required_fields ? ' required' : '' }}{{ 'token' in errors|keys ? ' has-error' : '' }}">
+                <label class="control-label" for="channel_token_input">Token</label>
+                <input type="text" name="token" class="form-control" id="channel_title_input" placeholder="Token" value="{{ item.token }}">
+                {{ 'token' in errors|keys ? '<div class="text-danger">' ~ errors.token ~ '</div>' : '' }}
+            </div>
+
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Save changes">
+            </div>
+        </form>
+
+    </div>
+</div>

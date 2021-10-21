@@ -1,0 +1,41 @@
+<div class="panel panel-default">
+  <div class="panel-body">
+
+    <form method="post">
+
+      <!-- Channels -->
+      <div class="form-group{{ 'channel_id' in required_fields ? ' required' : '' }}{{ 'channel_id' in errors|keys ? ' has-error' : '' }}">
+        <label class="control-label" for="channel_channel_id_input">Channel</label>
+        <select name="channel_id" id="channel_channel_id_input"  class="form-control">
+          {% if channels is empty %}
+            <option selected disabled>{{ select_channel_for_test_text }}</option>
+          {% endif %}
+          {% for channel in channels %}
+            <option value="{{ channel.id }}" {{ channel.id == channel_id ? 'selected' : '' }}>{{ channel.title }}</option>
+          {% endfor %}
+        </select>
+        {{ 'channel_id' in errors|keys ? '<div class="text-danger">' ~ errors.channel_id ~ '</div>' : '' }}
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group{{ 'subject' in required_fields ? ' required' : '' }}{{ 'subject' in errors|keys ? ' has-error' : '' }}">
+        <label class="control-label" for="channel_subject_input">Subject</label>
+        <input type="text" name="subject" class="form-control" id="channel_subject_input" placeholder="Subject" value="{{ subject }}">
+        {{ 'subject' in errors|keys ? '<div class="text-danger">' ~ errors.subject ~ '</div>' : '' }}
+      </div>
+
+      <!-- Message -->
+      <div class="form-group{{ 'message' in required_fields ? ' required' : '' }}{{ 'message' in errors|keys ? ' has-error' : '' }}">
+        <label class="control-label" for="channel_message_input">Message</label>
+        <textarea name="message" class="form-control" id="channel_message_input" placeholder="Message">{{ message }}</textarea>
+        {{ 'message' in errors|keys ? '<div class="text-danger">' ~ errors.message ~ '</div>' : '' }}
+      </div>
+
+      <div class="form-group">
+        <input type="submit" class="btn btn-primary" value="Submit">
+      </div>
+
+    </form>
+
+  </div>
+</div>
