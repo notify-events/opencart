@@ -141,10 +141,12 @@ class ModelExtensionReportNotifyEvents extends Model {
             switch (count($args)) {
                 case 2: {
                     $route .= '__new_order';
-                }; break;
+                }
+                    break;
                 case 5: {
                     $route .= '__status_change';
-                }; break;
+                }
+                    break;
             }
         }
 
@@ -333,7 +335,7 @@ class ModelExtensionReportNotifyEvents extends Model {
             $this->_stores[0] = [
                 'store_id' => 0,
                 'name'     => $this->config->get('config_name'),
-                'url'      => $this->config->get('config_secure') ? $this->config->get('site_ssl') : $this->config->get('site_ssl'),
+                'url'      => $this->config->get('config_secure') ? HTTPS_SERVER : HTTP_SERVER,
             ];
         }
 
@@ -507,9 +509,20 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $order_id = $args[0];
 
-                $order    = $this->getOrder($order_id);
-                $store    = $this->getStore($order['store_id']);
-                $customer = $this->getCustomer($order['customer_id']);
+                $order = $this->getOrder($order_id);
+                $store = $this->getStore($order['store_id']);
+
+                if ($order['customer_id'] > 0) {
+                    $customer = $this->getCustomer($order['customer_id']);
+                } else {
+                    $customer = [
+                        'customer_id' => 0,
+                        'firstname'   => $order['firstname'] ?: $order['payment_firstname'] ?: $order['shipping_firstname'],
+                        'lastname'    => $order['lastname'] ?: $order['payment_lastname'] ?: $order['shipping_lastname'],
+                        'email'       => $order['email'] ?: '',
+                        'telephone'   => $order['telephone'] ?: '',
+                    ];
+                }
 
                 $tags = [];
 
@@ -521,7 +534,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $sets[] = $tags;
 
-            }; break;
+            }
+            break;
             case self::EVENT_PRODUCT_OUT_OF_STOCK: {
 
                 $order_id = $args[0];
@@ -544,7 +558,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                     $sets[] = $tags;
                 }
 
-            }; break;
+            }
+                break;
             case self::EVENT_USER_NEW: {
 
                 $customer = $this->getCustomer($id);
@@ -557,7 +572,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $sets[] = $tags;
 
-            }; break;
+            }
+                break;
             case self::EVENT_RETURN_NEW:
             case self::EVENT_RETURN_STATUS_CHANGE:
                 {
@@ -565,11 +581,22 @@ class ModelExtensionReportNotifyEvents extends Model {
                         $id = $args[0];
                     }
 
-                    $return   = $this->getReturn($id);
-                    $order    = $this->getOrder($return['order_id']);
-                    $store    = $this->getStore($order['store_id']);
-                    $product  = $this->getProduct($return['product_id']);
-                    $customer = $this->getCustomer($return['customer_id']);
+                    $return  = $this->getReturn($id);
+                    $order   = $this->getOrder($return['order_id']);
+                    $store   = $this->getStore($order['store_id']);
+                    $product = $this->getProduct($return['product_id']);
+
+                    if ($return['customer_id'] > 0) {
+                        $customer = $this->getCustomer($return['customer_id']);
+                    } else {
+                        $customer = [
+                            'customer_id' => 0,
+                            'firstname'   => $order['firstname'] ?: $order['payment_firstname'] ?: $order['shipping_firstname'],
+                            'lastname'    => $order['lastname'] ?: $order['payment_lastname'] ?: $order['shipping_lastname'],
+                            'email'       => $order['email'] ?: '',
+                            'telephone'   => $order['telephone'] ?: '',
+                        ];
+                    }
 
                     $tags = [];
 
@@ -583,7 +610,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                     $sets[] = $tags;
 
-                }; break;
+                }
+            break;
         }
 
         return $sets;
@@ -652,7 +680,7 @@ class ModelExtensionReportNotifyEvents extends Model {
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($message));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-            $response = curl_exec($ch);
+            curl_exec($ch);
 
             curl_close($ch);
         }

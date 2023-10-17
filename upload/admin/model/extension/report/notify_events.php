@@ -341,9 +341,8 @@ class ModelExtensionReportNotifyEvents extends Model {
         }
 
         $query = $this->db->query($sql);
-        $items = $query->rows;
 
-        return $items;
+        return $query->rows;
     }
 
     private function getModel($table, $id) {
@@ -417,7 +416,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $data['enabled']     = array_key_exists('enabled', $data);
                 $data['channel_ids'] = array_key_exists('channel_ids', $data) && is_array($data['channel_ids']) ?
                     array_keys($data['channel_ids']) : [];
-            }; break;
+            }
+                break;
         }
 
         return $data;
@@ -662,10 +662,12 @@ class ModelExtensionReportNotifyEvents extends Model {
             switch (count($args)) {
                 case 2: {
                     $route .= '__new_order';
-                }; break;
+                }
+                    break;
                 case 5: {
                     $route .= '__status_change';
-                }; break;
+                }
+                    break;
             }
         }
 
@@ -943,7 +945,7 @@ class ModelExtensionReportNotifyEvents extends Model {
             $this->_stores[0] = [
                 'store_id' => 0,
                 'name'     => $this->config->get('config_name'),
-                'url'      => $this->config->get('config_secure') ? $this->config->get('site_ssl') : $this->config->get('site_ssl'),
+                'url'      => $this->config->get('config_secure') ? HTTPS_SERVER : HTTP_SERVER,
             ];
         }
 
@@ -1131,7 +1133,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $sets[] = $tags;
 
-            }; break;
+            }
+            break;
             case self::EVENT_PRODUCT_OUT_OF_STOCK: {
 
                 $order_id = $args[0];
@@ -1154,7 +1157,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                     $sets[] = $tags;
                 }
 
-            }; break;
+            }
+                break;
             case self::EVENT_USER_NEW: {
 
                 $customer = $this->getCustomer($id);
@@ -1167,7 +1171,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $sets[] = $tags;
 
-            }; break;
+            }
+                break;
             case self::EVENT_RETURN_NEW:
             case self::EVENT_RETURN_STATUS_CHANGE:
             {
@@ -1193,7 +1198,8 @@ class ModelExtensionReportNotifyEvents extends Model {
 
                 $sets[] = $tags;
 
-            }; break;
+            }
+            break;
         }
 
         return $sets;
@@ -1262,7 +1268,7 @@ class ModelExtensionReportNotifyEvents extends Model {
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($message));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-            $response = curl_exec($ch);
+            curl_exec($ch);
 
             curl_close($ch);
         }
