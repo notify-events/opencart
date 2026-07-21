@@ -279,7 +279,14 @@ class ModelExtensionReportNotifyEvents extends Model {
      */
     private function getOrder($id) {
         if (!array_key_exists($id, array_keys($this->_orders))) {
-            $this->_orders[$id] = $this->{self::MODEL_ORDER}->getOrder($id);
+            $order = $this->{self::MODEL_ORDER}->getOrder($id);
+
+            // Format the order total using the store's configured decimal places.
+            if (!empty($order)) {
+                $order['total'] = $this->currency->format($order['total'], $order['currency_code'], $order['currency_value']);
+            }
+
+            $this->_orders[$id] = $order;
         }
 
         return $this->_orders[$id];
@@ -417,7 +424,14 @@ class ModelExtensionReportNotifyEvents extends Model {
      */
     private function getProduct($id) {
         if (!array_key_exists($id, array_keys($this->_products))) {
-            $this->_products[$id] = $this->{self::MODEL_PRODUCT}->getProduct($id);
+            $product = $this->{self::MODEL_PRODUCT}->getProduct($id);
+
+            // Format the product price using the store's configured decimal places.
+            if (!empty($product)) {
+                $product['price'] = $this->currency->format($product['price'], $this->config->get('config_currency'));
+            }
+
+            $this->_products[$id] = $product;
         }
 
         return $this->_products[$id];
