@@ -115,7 +115,8 @@ $_['tl_order_total']       = 'Total';
 $_['tl_order_status']      = 'Status';
 $_['tl_order_currency']    = 'Currency';
 $_['tl_order_created_at']  = 'Created At';
-$_['tl_order_products']    = 'Products list';
+$_['tl_order_products_short'] = 'Products (short)';
+$_['tl_order_products_full']  = 'Products (with options)';
 
 $_['tl_order_payment_firstname'] = 'Firstname';
 $_['tl_order_payment_lastname']  = 'Lastname';

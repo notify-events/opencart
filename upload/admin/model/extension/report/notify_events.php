@@ -849,26 +849,86 @@ class ModelExtensionReportNotifyEvents extends Model {
      *
      * @return string
      */
-    private function getOrderProductsList($order_id, $order) {
+    private function getOrderProductsLists($order_id, $order) {
         $products = $this->getOrderProducts($order_id);
 
         if (empty($products)) {
-            return '';
+            return ['short' => '', 'full' => ''];
         }
 
-        $lines = [];
+        // Fetch SKUs for every ordered product in a single query (no per-item lookups).
+        $skus = $this->getProductSkus($products);
+
+        $short_items = [];
+        $full_items  = [];
+        $number      = 0;
 
         foreach ($products as $product) {
+            $number++;
+
             $price = $this->currency->format($product['price'], $order['currency_code'], $order['currency_value']);
 
-            $lines[] = sprintf('- %s (x%d) - %s', $product['name'], (int)$product['quantity'], $price);
+            // Model[ / SKU] — the " / SKU" part is appended only when a SKU is set.
+            $model_sku = $product['model'];
+
+            if (!empty($skus[$product['product_id']])) {
+                $model_sku .= ' / ' . $skus[$product['product_id']];
+            }
+
+            // Shared product line: "N) QTY x NAME (MODEL[ / SKU]) - PRICE".
+            $product_line = sprintf('%d) %d x %s (%s) - %s', $number, (int)$product['quantity'], $product['name'], $model_sku, $price);
+
+            // Short: just the product line.
+            $short_items[] = $product_line;
+
+            // Full: product line followed by each option as a "- " line.
+            $full_lines = [$product_line];
 
             foreach ($this->getOrderOptions($order_id, $product['order_product_id']) as $option) {
-                $lines[] = sprintf('    * %s: %s', $option['name'], $option['value']);
+                $full_lines[] = sprintf('- %s: %s', $option['name'], $option['value']);
+            }
+
+            $full_items[] = implode(PHP_EOL, $full_lines);
+        }
+
+        return [
+            'short' => implode(PHP_EOL, $short_items),
+            'full'  => implode(PHP_EOL . PHP_EOL, $full_items),
+        ];
+    }
+
+    /**
+     * Batch-fetch SKUs for the given order products in a single query.
+     *
+     * @param $products
+     *
+     * @return array  map of product_id => sku
+     */
+    private function getProductSkus($products) {
+        $ids = [];
+
+        foreach ($products as $product) {
+            if (!empty($product['product_id'])) {
+                $ids[(int)$product['product_id']] = (int)$product['product_id'];
             }
         }
 
-        return implode(PHP_EOL, $lines);
+        if (empty($ids)) {
+            return [];
+        }
+
+        $rows = $this->db->query('
+            SELECT `product_id`, `sku` FROM `' . DB_PREFIX . 'product`
+            WHERE `product_id` IN (' . implode(', ', $ids) . ')
+        ')->rows;
+
+        $skus = [];
+
+        foreach ($rows as $row) {
+            $skus[$row['product_id']] = $row['sku'];
+        }
+
+        return $skus;
     }
 
     /**
@@ -1036,7 +1096,8 @@ class ModelExtensionReportNotifyEvents extends Model {
             'status'     => 'order_status',
             'currency'   => 'currency_code',
             'created_at' => 'date_added',
-            'products'   => 'products',
+            'products_short' => 'products_short',
+            'products_full'  => 'products_full',
         ];
 
         $orderPaymentTags = [
@@ -1176,7 +1237,9 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $store    = $this->getStore($order['store_id']);
                 $customer = $this->getCustomer($order['customer_id']);
 
-                $order['products'] = $this->getOrderProductsList($order_id, $order);
+                $products_lists = $this->getOrderProductsLists($order_id, $order);
+                $order['products_short'] = $products_lists['short'];
+                $order['products_full']  = $products_lists['full'];
 
                 $tags = [];
 
@@ -1241,7 +1304,9 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $product  = $this->getProduct($return['product_id']);
                 $customer = $this->getCustomer($return['customer_id']);
 
-                $order['products'] = $this->getOrderProductsList($order['order_id'], $order);
+                $products_lists = $this->getOrderProductsLists($order['order_id'], $order);
+                $order['products_short'] = $products_lists['short'];
+                $order['products_full']  = $products_lists['full'];
 
                 $tags = [];
 
