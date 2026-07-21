@@ -1096,8 +1096,8 @@ class ModelExtensionReportNotifyEvents extends Model {
             'status'     => 'order_status',
             'currency'   => 'currency_code',
             'created_at' => 'date_added',
-            'products_short' => 'products_short',
-            'products_full'  => 'products_full',
+            'products'              => 'products',
+            'products_with_options' => 'products_with_options',
         ];
 
         $orderPaymentTags = [
@@ -1238,8 +1238,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $customer = $this->getCustomer($order['customer_id']);
 
                 $products_lists = $this->getOrderProductsLists($order_id, $order);
-                $order['products_short'] = $products_lists['short'];
-                $order['products_full']  = $products_lists['full'];
+                $order['products'] = $products_lists['short'];
+                $order['products_with_options'] = $products_lists['full'];
 
                 $tags = [];
 
@@ -1305,8 +1305,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $customer = $this->getCustomer($return['customer_id']);
 
                 $products_lists = $this->getOrderProductsLists($order['order_id'], $order);
-                $order['products_short'] = $products_lists['short'];
-                $order['products_full']  = $products_lists['full'];
+                $order['products'] = $products_lists['short'];
+                $order['products_with_options'] = $products_lists['full'];
 
                 $tags = [];
 
