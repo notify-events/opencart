@@ -813,10 +813,62 @@ class ModelExtensionReportNotifyEvents extends Model {
      */
     private function getOrderProducts($order_id) {
         if (!array_key_exists($order_id, array_keys($this->_order_products))) {
-            $this->_order_products[$order_id] = $this->{self::MODEL_ORDER}->getOrderProducts($order_id);
+            $model = $this->{self::MODEL_ORDER};
+
+            // OpenCart 4 renamed getOrderProducts() to getProducts(); support both.
+            // Models are wrapped in a Proxy, so probe with isset() (method_exists() fails on Proxy).
+            $this->_order_products[$order_id] = isset($model->getProducts)
+                ? $model->getProducts($order_id)
+                : $model->getOrderProducts($order_id);
         }
 
         return $this->_order_products[$order_id];
+    }
+
+    /**
+     * @param $order_id
+     * @param $order_product_id
+     *
+     * @return array
+     */
+    private function getOrderOptions($order_id, $order_product_id) {
+        $model = $this->{self::MODEL_ORDER};
+
+        // OpenCart 4 renamed getOrderOptions() to getOptions(); support both.
+        // Models are wrapped in a Proxy, so probe with isset() (method_exists() fails on Proxy).
+        return isset($model->getOptions)
+            ? $model->getOptions($order_id, $order_product_id)
+            : $model->getOrderOptions($order_id, $order_product_id);
+    }
+
+    /**
+     * Build a multi-line list of order products (name, quantity, price) with their selected options.
+     *
+     * @param $order_id
+     * @param $order
+     *
+     * @return string
+     */
+    private function getOrderProductsList($order_id, $order) {
+        $products = $this->getOrderProducts($order_id);
+
+        if (empty($products)) {
+            return '';
+        }
+
+        $lines = [];
+
+        foreach ($products as $product) {
+            $price = $this->currency->format($product['price'], $order['currency_code'], $order['currency_value']);
+
+            $lines[] = sprintf('- %s (x%d) - %s', $product['name'], (int)$product['quantity'], $price);
+
+            foreach ($this->getOrderOptions($order_id, $product['order_product_id']) as $option) {
+                $lines[] = sprintf('    * %s: %s', $option['name'], $option['value']);
+            }
+        }
+
+        return implode(PHP_EOL, $lines);
     }
 
     /**
@@ -984,6 +1036,7 @@ class ModelExtensionReportNotifyEvents extends Model {
             'status'     => 'order_status',
             'currency'   => 'currency_code',
             'created_at' => 'date_added',
+            'products'   => 'products',
         ];
 
         $orderPaymentTags = [
@@ -1123,6 +1176,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $store    = $this->getStore($order['store_id']);
                 $customer = $this->getCustomer($order['customer_id']);
 
+                $order['products'] = $this->getOrderProductsList($order_id, $order);
+
                 $tags = [];
 
                 $tags = array_merge($tags, $this->fillTagList($store, self::TG_STORE, $eventTags));
@@ -1185,6 +1240,8 @@ class ModelExtensionReportNotifyEvents extends Model {
                 $store    = $this->getStore($order['store_id']);
                 $product  = $this->getProduct($return['product_id']);
                 $customer = $this->getCustomer($return['customer_id']);
+
+                $order['products'] = $this->getOrderProductsList($order['order_id'], $order);
 
                 $tags = [];
 
